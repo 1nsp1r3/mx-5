@@ -1,7 +1,26 @@
-name: deploy
+name: Publish
 on: [push]
 jobs:
-  write-to-console:
+  deploy-with-ssh:
     runs-on: ubuntu-latest
     steps:
-      - run: echo 'Hello world!'
+      - uses: actions/checkout@v2
+
+#      - name: clean some files
+#        run: rm -rf .git/ .github/ .gitignore README.md
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: unnecessary
+
+      - name: Adding Known Hosts
+        run: ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'rm -rf /var/docker/apache-2.4/www/prod/mx-5/'
+      - run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'mkdir /var/docker/apache-2.4/www/prod/mx-5/'
+      - run: scp -P ${{ secrets.SSH_PORT }} -r * ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/docker/apache-2.4/www/prod/mx-5/
+
+#      - run: rsync -rzvci -e "ssh -p ${{ secrets.SSH_PORT }}" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/docker/apache-2.4/www/prod/mx-5/
+#      - run: rsync -avz -e 'ssh -p 220' ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/docker/apache-2.4/www/prod/mx-5/
