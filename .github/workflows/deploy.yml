@@ -1,7 +1,7 @@
 name: Publish
 on: [push]
 jobs:
-  deploy-with-ssh:
+  deploy-to-s3:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
